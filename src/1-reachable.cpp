@@ -35,6 +35,9 @@ void print_graph (const Graph& graph) {
     //Print a label and all the entries in the Graph, in alphabetical order.
     //Use a "->" to separate the key node name from the Set of node names to
     //  which it has an edge.
+    std::cout<<"\n Graph: source -> {destination} edges"<<std::endl;
+    for (GraphEntry kv : graph)
+        std::cout << "  " << kv.first << " -> " << kv.second << std::endl;
 }
 
 NodeSet reachable (const Graph& graph, std::string start) {
@@ -54,7 +57,8 @@ int main () {
     try {
         std::ifstream graph_data_file;
         ics::safe_open(graph_data_file, "Enter file name", "graph1.txt");
-        read_graph(graph_data_file);
+        Graph graph = read_graph(graph_data_file);
+        print_graph(graph);
 
 
     }
