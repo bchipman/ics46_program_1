@@ -54,15 +54,15 @@ NodeSet reachable (const Graph& graph, std::string start) {
     //Use a local Set and a Queue to respectively store the reachable nodes and
     //  the nodes that are being explored.
 
-    //To compute all the reachable nodes in a graph,
-    //  create
-    //      a Set (initially empty) of reached nodes and
-    //      a Queue (initially containing the parameter start node) of nodes that we are going to explore (to find nodes they can reach).
-    //  While the exploring queue still has nodes,
-    //      remove the first one and put it into the reached set;
-    //      if it is a key in the graph (not all nodes are) then for all its destination nodes that are not already in the reached set, put them in the exploring queue.
-    //  When the exploring queue becomes empty (can you argue that this always will happen -there is no infinite looping), return the reached set.
-
+    //Algorithm to compute all the reachable nodes in a graph:
+    //  1. Create local variables:
+    //    - a Set (initially empty) of reached nodes
+    //    - a Queue (initially containing the parameter start node) of nodes to explore
+    //  2. While the exploring queue still has nodes:
+    //    - remove the first node and put it into the reached set
+    //    - if this node is a key in the graph:
+    //      - then for all its destination nodes not already in the reached set, put them in the exploring queue
+    //  3. When the exploring queue becomes empty, return the reached set.
     NodeSet reached_nodes_set;
     GraphQ nodes_being_explored_queue = {start};
 
@@ -70,18 +70,10 @@ NodeSet reachable (const Graph& graph, std::string start) {
         Node current_node = nodes_being_explored_queue.dequeue();
         reached_nodes_set.insert(current_node);
 
-        if (graph.has_key(current_node)) {
-
-            NodeSet destination_nodes = graph[current_node];
-
-            for (Node node : NodeSet(destination_nodes))
-                if (reached_nodes_set.contains(node))
-                    destination_nodes.erase(node);
-
-            for (Node node : destination_nodes)
-                nodes_being_explored_queue.enqueue(node);
-
-        }
+        if (graph.has_key(current_node))
+            for (Node node : graph[current_node])
+                if (!reached_nodes_set.contains(node))
+                    nodes_being_explored_queue.enqueue(node);
     }
     return reached_nodes_set;
 }
@@ -95,7 +87,6 @@ int main () {
 
     try {
         std::ifstream graph_data_file;
-        //ics::safe_open(graph_data_file, "Enter file name", "graph1.txt");
         ics::safe_open(graph_data_file, "Enter file name", "graph1.txt");
         Graph graph = read_graph(graph_data_file);
         print_graph(graph);
