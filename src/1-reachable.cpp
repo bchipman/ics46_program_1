@@ -31,12 +31,20 @@ Graph read_graph (std::ifstream& file) {
     return graph;
 }
 
+bool entry_in_alphabetical_order(const GraphEntry& a, const GraphEntry& b) {
+    return a.first < b.first;
+}
+
 void print_graph (const Graph& graph) {
     //Print a label and all the entries in the Graph, in alphabetical order.
     //Use a "->" to separate the key node name from the Set of node names to
     //  which it has an edge.
+
+    GraphPQ sorted_graph(entry_in_alphabetical_order);
+    sorted_graph.enqueue(graph.ibegin(), graph.iend());
+
     std::cout<<"\n Graph: source -> {destination} edges"<<std::endl;
-    for (GraphEntry kv : graph)
+    for (GraphEntry kv : sorted_graph)
         std::cout << "  " << kv.first << " -> " << kv.second << std::endl;
 }
 
