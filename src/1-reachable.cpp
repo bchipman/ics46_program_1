@@ -91,11 +91,16 @@ int main () {
         Graph graph = read_graph(graph_data_file);
         print_graph(graph);
 
-        NodeSet reached = reachable(graph, "a");
-        std::cout<<reached<<std::endl;
-
-
+        std::string user_input;
+        while (user_input != "quit") {
+            user_input = ics::prompt_string("\nEnter starting node (enter 'quit' to quit)");
+            if (graph.has_key(user_input))
+                std::cout << "Reachable from node name " << user_input << " = " << reachable(graph, user_input) << std::endl;
+            else if (user_input != "quit")
+                std::cout << "  " << user_input << " is not a source node name in the graph" << std::endl;
+        }
     }
+
     catch (ics::IcsError& e) {
         std::cout << e.what() << std::endl;
     }
