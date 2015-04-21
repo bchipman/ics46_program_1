@@ -17,15 +17,6 @@ typedef ics::ArrayPriorityQueue<CorpusEntry> CorpusPQ;
 typedef ics::ArrayMap<WordQueue,FollowSet>   Corpus;
 
 
-std::string random_in_set (const FollowSet& words) {
-    //Return a random word in the words set (use in produce_text)
-    int index = ics::rand_range(1, words.size());
-    int i = 0;
-    for (std::string s : words)
-        if (++i == index)
-            return s;
-    return "?";
-}
 
 Corpus read_corpus (int os, std::ifstream& file) {
     //Read an open file of lines of words (separated by spaces) and return a
@@ -52,6 +43,15 @@ void print_corpus (const Corpus& corpus) {
     //  that can follow it.
 }
 
+std::string random_in_set (const FollowSet& words) {
+    //Return a random word in the words set (use in produce_text)
+    int index = ics::rand_range(1, words.size());
+    int i = 0;
+    for (std::string s : words)
+        if (++i == index)
+            return s;
+    return "?";
+}
 WordQueue produce_text (const Corpus& corpus, const WordQueue& start, int count) {
     //Return a Queue of words, starting with those in start and including count more
     //  randomly selected words using corpus to decide which word comes next.
