@@ -26,6 +26,24 @@ const FA read_fa (std::ifstream& file) {
     //  followed by new state) all separated by semicolons), and return a Map
     //  whose keys are states and whose associated values are another Map with
     //  each input in that state (keys) and the resulting state it leads to.
+    FA fa;
+    InputStateMap ism;
+    std::string line;
+
+    while (getline(file, line)) {
+        std::vector<std::string> line_as_vector = ics::split(line, ";");
+        std::string main_state = line_as_vector.front();
+
+        for (int i=0; i<line_as_vector.size(); ++i) {
+            if (i%2 == 0 && i != 0) {
+                std::string input = line_as_vector[i-1];
+                std::string state = line_as_vector[i];
+                ism[input] = state;
+            }
+        }
+        fa[main_state] = ism;
+    }
+    return fa;
 }
 
 void print_fa (const FA& fa) {
@@ -61,7 +79,9 @@ int main () {
     //  Queue, process the Queue and print the results in a nice form.
 
     try {
-        
+        std::ifstream file;
+        ics::safe_open(file, "Enter file name", "faparity.txt");
+        FA fa = read_fa(file);
 
 
 
