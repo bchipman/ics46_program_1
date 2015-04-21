@@ -9,14 +9,16 @@
 #include "array_set.hpp"
 #include "array_map.hpp"
 
-typedef ics::ArraySet           <std::string>                   States;
-typedef ics::ArrayQueue         <std::string>                   InputsQueue;
-typedef ics::ArrayMap           <std::string, States>           InputStatesMap;
-typedef ics::ArrayMap           <std::string, InputStatesMap>   NDFA;
-typedef ics::pair               <std::string, InputStatesMap>   NDFAEntry;
-typedef ics::ArrayPriorityQueue <NDFAEntry>                     NDFAPQ;
-typedef ics::pair               <std::string, States>           Transitions;
-typedef ics::ArrayQueue         <Transitions>                   TransitionsQueue;
+typedef std::string                                         Input;
+typedef std::string                                         State;
+typedef ics::ArraySet           <State>                     States;
+typedef ics::ArrayQueue         <Input>                     InputsQueue;
+typedef ics::ArrayMap           <Input, States>             InputStatesMap;
+typedef ics::ArrayMap           <State, InputStatesMap>     NDFA;
+typedef ics::pair               <State, InputStatesMap>     NDFAEntry;
+typedef ics::ArrayPriorityQueue <NDFAEntry>                 NDFAPQ;
+typedef ics::pair               <Input, States>             Transitions;
+typedef ics::ArrayQueue         <Transitions>               TransitionsQueue;
 
 
 const NDFA read_ndfa (std::ifstream& file) {
@@ -32,12 +34,12 @@ const NDFA read_ndfa (std::ifstream& file) {
     while (getline(file, line)) {
         InputStatesMap ism;  //must be inside loop
         std::vector<std::string> line_as_vector = ics::split(line, ";");
-        std::string main_state = line_as_vector.front();
+        State main_state = line_as_vector.front();
 
         for (int i=0; i<line_as_vector.size(); ++i) {
             if (i%2 == 0 && i != 0) {
-                std::string input = line_as_vector[i-1];
-                std::string state = line_as_vector[i];
+                Input input = line_as_vector[i-1];
+                State state = line_as_vector[i];
                 ism[input].insert(state);
             }
         }
@@ -61,7 +63,7 @@ void print_ndfa (const NDFA& ndfa) {
         std::cout << "  " << kv.first << " trasnsitions: " << kv.second <<std::endl;
 }
 
-TransitionsQueue process (const NDFA& ndfa, std::string state, const InputsQueue& inputs) {
+TransitionsQueue process (const NDFA& ndfa, State state, const InputsQueue& inputs) {
     //Return a queue of the calculated transition pairs, based on the non-deterministic
     //  finite automaton, initial state, and queue of inputs; each pair in the returned
     //  queue is of the form: input, set of new states.
@@ -80,7 +82,7 @@ TransitionsQueue process (const NDFA& ndfa, std::string state, const InputsQueue
     TransitionsQueue trans_queue;
     trans_queue.enqueue(initial_trans_pair);
 
-    for (auto i : inputs) {
+    for (Input i : inputs) {
         States temp_states;
         for (auto curr_state : current_states) {
             InputStatesMap ism = ndfa[curr_state];
@@ -135,7 +137,7 @@ int main () {
         std::string line;
         while (getline(inputs_file, line)) {
             std::vector<std::string> line_as_vector = ics::split(line, ";");
-            std::string state = line_as_vector[0];
+            State state = line_as_vector[0];
             InputsQueue iq;
             for (std::vector<std::string>::iterator it = line_as_vector.begin()+1; it != line_as_vector.end(); ++it)
                 iq.enqueue(*it);

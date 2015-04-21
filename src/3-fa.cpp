@@ -9,13 +9,15 @@
 #include "array_set.hpp"
 #include "array_map.hpp"
 
-typedef ics::ArrayQueue         <std::string>                   InputsQueue;
-typedef ics::ArrayMap           <std::string, std::string>      InputStateMap;
-typedef ics::ArrayMap           <std::string, InputStateMap>    FA;
-typedef ics::pair               <std::string, InputStateMap>    FAEntry;
-typedef ics::ArrayPriorityQueue <FAEntry>                       FAPQ;
-typedef ics::pair               <std::string, std::string>      Transition;
-typedef ics::ArrayQueue         <Transition>                    TransitionQueue;
+typedef std::string                                     Input;
+typedef std::string                                     State;
+typedef ics::ArrayQueue         <Input>                 InputsQueue;
+typedef ics::ArrayMap           <Input, State>          InputStateMap;
+typedef ics::ArrayMap           <State, InputStateMap>  FA;
+typedef ics::pair               <State, InputStateMap>  FAEntry;
+typedef ics::ArrayPriorityQueue <FAEntry>               FAPQ;
+typedef ics::pair               <Input, State>          Transition;
+typedef ics::ArrayQueue         <Transition>            TransitionQueue;
 
 
 const FA read_fa (std::ifstream& file) {
@@ -30,12 +32,12 @@ const FA read_fa (std::ifstream& file) {
 
     while (getline(file, line)) {
         std::vector<std::string> line_as_vector = ics::split(line, ";");
-        std::string main_state = line_as_vector.front();
+        State main_state = line_as_vector.front();
 
         for (int i=0; i<line_as_vector.size(); ++i) {
             if (i%2 == 0 && i != 0) {
-                std::string input = line_as_vector[i-1];
-                std::string state = line_as_vector[i];
+                Input input = line_as_vector[i-1];
+                State state = line_as_vector[i];
                 ism[input] = state;
             }
         }
@@ -59,7 +61,7 @@ void print_fa (const FA& fa) {
         std::cout << "  " << kv.first << " transitions: " << kv.second << std::endl;
 }
 
-TransitionQueue process (const FA& fa, std::string state, const InputsQueue& inputs) {
+TransitionQueue process (const FA& fa, State state, const InputsQueue& inputs) {
     //Return a queue of the calculated transition pairs, based on the finite
     //  automaton, initial state, and queue of inputs; each pair in the returned
     //  queue is of the form: input, new state.
@@ -67,11 +69,11 @@ TransitionQueue process (const FA& fa, std::string state, const InputsQueue& inp
     //If any input i is illegal (does not lead to a state in the finite
     //  automaton, then the last pair in the returned queue is i,"None".
     InputStateMap ism;
-    std::string new_state;
+    State new_state;
     TransitionQueue trans_queue;
     trans_queue.enqueue(Transition("", state));
 
-    for (std::string input : inputs) {
+    for (Input input : inputs) {
         ism         = fa[state];
         new_state = (ism.has_key(input)) ? ism[input] : "None";
         Transition trans(input, new_state);
@@ -87,7 +89,7 @@ void interpret (TransitionQueue& tq) {  //or TransitionQueue or TransitionQueue&
     //  resulting new state (or "illegal input: terminated", if the state is
     //  "None") indented on subsequent lines; on the last line, print the Stop
     //  state (which might be "None").
-    std::string last_state;
+    State last_state;
     for (Transition t : tq) {
         if (t.first == "")
             std::cout << "Start state = " << t.second << std::endl;
@@ -124,7 +126,7 @@ int main () {
         std::string line;
         while (getline(inputs_file, line)) {
             std::vector<std::string> line_as_vector = ics::split(line, ";");
-            std::string state = line_as_vector[0];
+            State state = line_as_vector[0];
             InputsQueue iq;
             for (std::vector<std::string>::iterator it = line_as_vector.begin()+1; it != line_as_vector.end(); ++it)
                 iq.enqueue(*it);
