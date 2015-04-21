@@ -24,7 +24,6 @@ Corpus read_corpus (int os, std::ifstream& file) {
     //  associated with the Set of all words that follow them somewhere in the
     //  file.
     //You may assume the first line contains at least Order-Statstic words.
-
     std::string line;
     std::vector<std::string> words_vector;
     while (getline(file, line))
@@ -98,6 +97,21 @@ WordQueue produce_text (const Corpus& corpus, const WordQueue& start, int count)
     //  randomly selected words using corpus to decide which word comes next.
     //If there is no word that follows the previous ones, put "None" into the queue
     //  and return immediately this list (whose size is <= start.size() + count).
+    WordQueue wq_key = start;
+    WordQueue wq_gen = start;
+
+    for (int i = 0; i < count; ++i) {
+        FollowSet choices = corpus[wq_key];
+        if (choices.empty()) {
+            wq_gen.enqueue("None");
+            return wq_gen;
+        }
+        std::string chosen = random_in_set(choices);
+        wq_gen.enqueue(chosen);
+        wq_key.dequeue();
+        wq_key.enqueue(chosen);
+    }
+    return wq_gen;    
 }
 
 int main () {
@@ -109,18 +123,22 @@ int main () {
 
     try {
         int order_stat = ics::prompt_int("Enter order statistic", 2);
-
         std::ifstream wg_text_file;
         ics::safe_open(wg_text_file, "Enter file name to process", "wginput1.txt");
-
         Corpus corpus = read_corpus(order_stat, wg_text_file);
         print_corpus(corpus);
 
-
-
-
-
-
+        std::cout << "\nEnter " << order_stat << " words to start with" << std::endl;
+        WordQueue start_words;
+        for (int i = 0; i < order_stat; ++i) {
+            std::stringstream ss;
+            ss << "Enter word " << (i+1);
+            std::string word_input = ics::prompt_string(ss.str());
+            start_words.enqueue(word_input);
+        }
+        int word_count = ics::prompt_int("Enter # of words to generate");
+        WordQueue random_text = produce_text(corpus, start_words, word_count);
+        std::cout << "Random text = " << random_text << std::endl;
     }
 
     catch (ics::IcsError& e) {
