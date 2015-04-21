@@ -75,24 +75,22 @@ TransitionsQueue process (const NDFA& ndfa, State state, const InputsQueue& inpu
     States current_states;
     current_states.insert(state);
 
-    //Create the initial pair with "" as input
-    Transitions initial_trans_pair("", current_states);
-
-    //Create the queue and add the initial pair to it
+    //Create the queue and add the initial pair with "" as input to it
     TransitionsQueue trans_queue;
-    trans_queue.enqueue(initial_trans_pair);
+    trans_queue.enqueue(Transitions("", current_states));
 
-    for (Input i : inputs) {
+    for (Input input : inputs) {
         States temp_states;
-        for (auto curr_state : current_states) {
-            InputStatesMap ism = ndfa[curr_state];
-            if (ism.has_key(i)) {
-                States resulting_states = ism[i];
-                for (auto resulting_state : resulting_states)
+        for (State curr_state : current_states) {
+            InputStatesMap ism = ndfa[curr_state];  //must be inside loop
+
+            if (ism.has_key(input)) {
+                States resulting_states = ism[input];
+                for (State resulting_state : resulting_states)
                     temp_states.insert(resulting_state);
             }
         }
-        Transitions trans_pair(i, temp_states);
+        Transitions trans_pair(input, temp_states);
         trans_queue.enqueue(trans_pair);
         current_states = temp_states;
     }
@@ -105,7 +103,7 @@ void interpret (TransitionsQueue& tq) {  //or TransitionsQueue or TransitionsQue
     //  resulting new states indented on subsequent lines; on the last line, print
     //  the Stop state.
     States last_states;
-    for (auto t : tq) {
+    for (Transitions t : tq) {
         if (t.first == "")
             std::cout << "Start state = " << t.second << std::endl;
         else {
@@ -128,11 +126,15 @@ int main () {
     try {
         std::ifstream file;
         ics::safe_open(file, "Enter file name of Non-Deterministic Finite Automaton", "ndfaendin01.txt");
+        //ics::safe_open(file, "Enter file name of Non-Deterministic Finite Automaton", "ndfatrain.txt");
+        //ics::safe_open(file, "Enter file name of Non-Deterministic Finite Automaton", "ndfare.txt");
         NDFA ndfa = read_ndfa(file);
         print_ndfa(ndfa);
 
         std::ifstream inputs_file;
         ics::safe_open(inputs_file, "\nEnter file name of start-states and inputs", "ndfainputendin01.txt");
+        //ics::safe_open(inputs_file, "\nEnter file name of start-states and inputs", "ndfainputtrain.txt");
+        //ics::safe_open(inputs_file, "\nEnter file name of start-states and inputs", "ndfainputre.txt");
 
         std::string line;
         while (getline(inputs_file, line)) {
