@@ -68,6 +68,33 @@ TransitionsQueue process (const NDFA& ndfa, std::string state, const InputsQueue
     //The first pair contains "" as the input and the initial state.
     //If any input i is illegal (does not lead to any state in the non-deterministic finite
     //  automaton, ignore it).
+
+    //Create the set and add state parameter to it
+    States current_states;
+    current_states.insert(state);
+
+    //Create the initial pair with "" as input
+    Transitions initial_trans_pair("", current_states);
+
+    //Create the queue and add the initial pair to it
+    TransitionsQueue trans_queue;
+    trans_queue.enqueue(initial_trans_pair);
+
+    for (auto i : inputs) {
+        States temp_states;
+        for (auto curr_state : current_states) {
+            InputStatesMap ism = ndfa[curr_state];
+            if (ism.has_key(i)) {
+                States resulting_states = ism[i];
+                for (auto resulting_state : resulting_states)
+                    temp_states.insert(resulting_state);
+            }
+        }
+        Transitions trans_pair(i, temp_states);
+        trans_queue.enqueue(trans_pair);
+        current_states = temp_states;
+    }
+    return trans_queue;
 }
 
 void interpret (TransitionsQueue& tq) {  //or TransitionsQueue or TransitionsQueue&&
@@ -75,6 +102,16 @@ void interpret (TransitionsQueue& tq) {  //or TransitionsQueue or TransitionsQue
     //Print the Start state on the first line; then print each input and the
     //  resulting new states indented on subsequent lines; on the last line, print
     //  the Stop state.
+    States last_states;
+    for (auto t : tq) {
+        if (t.first == "")
+            std::cout << "Start state = " << t.second << std::endl;
+        else {
+            std::cout << "  Input = " << t.first << "; new possible states = " << t.second << std::endl;
+            last_states = t.second;
+        }
+    }
+    std::cout << "Stop state(s) = " << last_states << std::endl;
 }
 
 int main () {
@@ -92,8 +129,20 @@ int main () {
         NDFA ndfa = read_ndfa(file);
         print_ndfa(ndfa);
 
+        std::ifstream inputs_file;
+        ics::safe_open(inputs_file, "\nEnter file name of start-states and inputs", "ndfainputendin01.txt");
 
-
+        std::string line;
+        while (getline(inputs_file, line)) {
+            std::vector<std::string> line_as_vector = ics::split(line, ";");
+            std::string state = line_as_vector[0];
+            InputsQueue iq;
+            for (std::vector<std::string>::iterator it = line_as_vector.begin()+1; it != line_as_vector.end(); ++it)
+                iq.enqueue(*it);
+            TransitionsQueue tq = process(ndfa, state, iq);
+            std::cout << "\nStarting new simulation with description: " << line << std::endl;
+            interpret(tq);
+        }
     }
 
     catch (ics::IcsError& e) {
