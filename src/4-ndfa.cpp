@@ -26,12 +26,39 @@ const NDFA read_ndfa (std::ifstream& file) {
     //  return a Map whose keys are states and whose associated values are another
     //  Map with each input in that state (keys) and the resulting set of states it
     //  can lead to.
-}
+    NDFA ndfa;
+    std::string line;
 
+    while (getline(file, line)) {
+        InputStatesMap ism;  //must be inside loop
+        std::vector<std::string> line_as_vector = ics::split(line, ";");
+        std::string main_state = line_as_vector.front();
+
+        for (int i=0; i<line_as_vector.size(); ++i) {
+            if (i%2 == 0 && i != 0) {
+                std::string input = line_as_vector[i-1];
+                std::string state = line_as_vector[i];
+                ism[input].insert(state);
+            }
+        }
+        ndfa[main_state] = ism;
+    }
+    return ndfa;
+
+}
+bool ndfa_entry_alphabetically (const NDFAEntry& a, const NDFAEntry& b) {
+    return a.first < b.first;
+}
 void print_ndfa (const NDFA& ndfa) {
     //Print a label and all the entries in the finite automaton Map, in
     //  alphabetical order of the states: each line has a state, the text
     //  "transition:" and the Map of its transitions.
+    NDFAPQ sorted_ndfa(ndfa_entry_alphabetically);
+    sorted_ndfa.enqueue(ndfa.ibegin(), ndfa.iend());
+
+    std::cout << "\nNon-Deterministic Finite Automaton Description" << std::endl;
+    for (NDFAEntry kv : sorted_ndfa)
+        std::cout << "  " << kv.first << " trasnsitions: " << kv.second <<std::endl;
 }
 
 TransitionsQueue process (const NDFA& ndfa, std::string state, const InputsQueue& inputs) {
@@ -60,7 +87,10 @@ int main () {
     //  Queue, process the Queue and print the results in a nice form.
 
     try {
-
+        std::ifstream file;
+        ics::safe_open(file, "Enter file name of Non-Deterministic Finite Automaton", "ndfaendin01.txt");
+        NDFA ndfa = read_ndfa(file);
+        print_ndfa(ndfa);
 
 
 
