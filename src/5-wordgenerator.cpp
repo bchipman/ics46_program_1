@@ -24,6 +24,25 @@ Corpus read_corpus (int os, std::ifstream& file) {
     //  associated with the Set of all words that follow them somewhere in the
     //  file.
     //You may assume the first line contains at least Order-Statstic words.
+
+    std::string line;
+    std::vector<std::string> words_vector;
+    while (getline(file, line))
+        for (std::string w : ics::split(line, " "))  //ics::split(line, " ")   gives   std::vector<std::string>
+            words_vector.push_back(w);
+
+    Corpus corpus;
+    WordQueue wq;
+    for (std::string word : words_vector) {
+        if (wq.size() < os)
+            wq.enqueue(word);
+        else {
+            corpus[wq].insert(word);
+            wq.dequeue();
+            wq.enqueue(word);
+        }
+    }
+    return corpus;
 }
 
 bool queue_gt (const CorpusEntry& a, const CorpusEntry& b) {
@@ -67,6 +86,14 @@ int main () {
     //Call the functions above to solve the problem, and print the appropriate information
 
     try {
+        int order_stat = ics::prompt_int("Enter order statistic", 2);
+
+        std::ifstream wg_text_file;
+        ics::safe_open(wg_text_file, "Enter file name to process", "wginput1.txt");
+
+        Corpus corpus = read_corpus(order_stat, wg_text_file);
+        //print_corpus(corpus);
+
 
 
 
