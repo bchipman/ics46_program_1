@@ -11,11 +11,9 @@
 
 typedef ics::ArrayQueue         <std::string>                   InputsQueue;
 typedef ics::ArrayMap           <std::string, std::string>      InputStateMap;
-
 typedef ics::ArrayMap           <std::string, InputStateMap>    FA;
 typedef ics::pair               <std::string, InputStateMap>    FAEntry;
 typedef ics::ArrayPriorityQueue <FAEntry>                       FAPQ;
-
 typedef ics::pair               <std::string, std::string>      Transition;
 typedef ics::ArrayQueue         <Transition>                    TransitionQueue;
 
@@ -73,7 +71,7 @@ TransitionQueue process (const FA& fa, std::string state, const InputsQueue& inp
     TransitionQueue trans_queue;
     trans_queue.enqueue(Transition("", state));
 
-    for (auto input : inputs) {
+    for (std::string input : inputs) {
         ism         = fa[state];
         new_state = (ism.has_key(input)) ? ism[input] : "None";
         Transition trans(input, new_state);
@@ -89,6 +87,20 @@ void interpret (TransitionQueue& tq) {  //or TransitionQueue or TransitionQueue&
     //  resulting new state (or "illegal input: terminated", if the state is
     //  "None") indented on subsequent lines; on the last line, print the Stop
     //  state (which might be "None").
+    std::string last_state;
+    for (Transition t : tq) {
+        if (t.first == "")
+            std::cout << "Start state = " << t.second << std::endl;
+        else {
+            std::cout << "  Input = " << t.first;
+            if (t.second == "None")
+                std::cout << "; illegal input: terminated" << std::endl;
+            else
+                std::cout << "; new state = " << t.second << std::endl;
+            last_state = t.second;
+        }
+    }
+    std::cout << "Stop state = " << last_state << std::endl;
 }
 
 int main () {
@@ -102,12 +114,12 @@ int main () {
 
     try {
         std::ifstream file;
-        ics::safe_open(file, "Enter file name", "faparity.txt");
+        ics::safe_open(file, "Enter file name of Finite Automaton", "faparity.txt");
         FA fa = read_fa(file);
         print_fa(fa);
 
         std::ifstream inputs_file;
-        ics::safe_open(file, "\nEnter file name of start-states and inputs", "fainputparity.txt");
+        ics::safe_open(inputs_file, "\nEnter file name of start-states and inputs", "fainputparity.txt");
 
         std::string line;
         while (getline(inputs_file, line)) {
@@ -117,10 +129,9 @@ int main () {
             for (std::vector<std::string>::iterator it = line_as_vector.begin()+1; it != line_as_vector.end(); ++it)
                 iq.enqueue(*it);
             TransitionQueue tq = process(fa, state, iq);
+            std::cout << "\nStarting new simulation with description: " << line << std::endl;
+            interpret(tq);
         }
-
-
-
     }
 
     catch (ics::IcsError& e) {

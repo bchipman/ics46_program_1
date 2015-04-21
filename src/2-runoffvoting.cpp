@@ -16,7 +16,6 @@ typedef ics::ArrayQueue         <Candidate>                     CandidateQueue;
 typedef ics::ArrayMap           <Candidate, int>                CandidateTally;
 typedef ics::pair               <Candidate, int>                CandidateTallyEntry;
 
-
 typedef std::string                                             Voter;
 typedef ics::ArrayMap           <Voter, CandidateQueue>         Preferences;
 typedef ics::pair               <Voter, CandidateQueue>         PreferencesEntry;
