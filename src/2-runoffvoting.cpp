@@ -17,9 +17,11 @@ typedef ics::ArrayMap           <std::string, int>              CandidateTally;
 
 typedef ics::ArrayMap           <std::string, CandidateQueue>   Preferences;
 typedef ics::pair               <std::string, CandidateQueue>   PreferencesEntry;
+typedef ics::ArrayPriorityQueue <PreferencesEntry>              PreferencesEntryPQ;
 
 typedef ics::pair               <std::string, int>              TallyEntry;
 typedef ics::ArrayPriorityQueue <TallyEntry>                    TallyEntryPQ;
+
 
 Preferences read_voter_preferences (std::ifstream& file) {
     //Read an open file stating voter preferences (each line is (a) a voter
@@ -27,12 +29,37 @@ Preferences read_voter_preferences (std::ifstream& file) {
     //  least preferred), separated by a semicolons), and return a Map of the
     //  preferences as a Map whose keys are voter names and whose values are
     //  a queue of candidate preferences.
+    Preferences preferences;
+    std::string line;
+
+    while(getline(file, line)) {
+        std::vector<std::string> line_as_vector = ics::split(line, ";");
+        std::string voter = line_as_vector.front();
+        line_as_vector.erase(line_as_vector.begin());
+
+        CandidateQueue cq;
+        for (auto candidate_pref : line_as_vector)
+            cq.enqueue(candidate_pref);
+        preferences[voter] = cq;
+                //enqueue(cq);
+    }
+    return preferences;
+}
+
+bool entry_in_alphabetical_order(const PreferencesEntry& a, const PreferencesEntry& b) {
+    return a.first < b.first;
 }
 
 void print_voter_preferences (const Preferences& preferences) {
     //Print a label and all the entries in the preferences Map, in alphabetical
     //  order according to the voter.
     //Use a "->" to separate the voter name from the Queue of candidate names.
+    PreferencesEntryPQ sorted_preferences(entry_in_alphabetical_order);
+    sorted_preferences.enqueue(preferences.ibegin(), preferences.iend());
+
+    std::cout<<"\nVoter Preferences"<<std::endl;
+    for (PreferencesEntry kv : sorted_preferences)
+        std::cout<<"  "<<kv.first<<" -> "<<kv.second<<std::endl;
 }
 
 void print_tally (std::string message, const CandidateTally& tally, bool (* has_higher_priority) (const TallyEntry& i, const TallyEntry& j)) {
@@ -72,6 +99,12 @@ int main () {
     //Print the final result: there may 1 candidate left, the winner, or 0, no
     //  winner.
     try {
+
+        std::ifstream file;
+        ics::safe_open(file, "Enter file name", "votepref1.txt");
+        Preferences preferences = read_voter_preferences(file);
+        print_voter_preferences(preferences);
+
     }
     catch (ics::IcsError& e) {
         std::cout << e.what() << std::endl;
