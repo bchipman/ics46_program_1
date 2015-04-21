@@ -104,6 +104,19 @@ CandidateSet remaining_candidates (const CandidateTally& tally) {
     //  tally of votes: compute the minimum number of votes and return a Set of
     //  all candidates receiving more than that minimum; if all candidates
     //  receive the same number of votes, the empty Set is returned.
+
+    //Computing the minimum number of votes
+    int min_votes = std::numeric_limits<int>::max();
+    for (auto ct : tally)
+        if (ct.second < min_votes)
+            min_votes = ct.second;
+
+    //Adding all candidates that received more votes than the minimum
+    CandidateSet rem_cands;
+    for (auto ct : tally)
+        if (ct.second > min_votes)
+            rem_cands.insert(ct.first);
+    return rem_cands;
 }
 
 int main () {
@@ -118,6 +131,7 @@ int main () {
     //  continue this process until there are less than 2 candidates.
     //Print the final result: there may 1 candidate left, the winner, or 0, no
     //  winner.
+
     try {
         std::ifstream file;
         ics::safe_open(file, "Enter file name", "votepref1.txt");
@@ -145,9 +159,15 @@ int main () {
             ++ballot_num;
         }
 
+        if (rem_cands.size() == 1)
+            std::cout << "\nWinner is " << *rem_cands.ibegin() << std::endl;
+        else
+            std::cout << "\nNo winner: election is a tie among candidates remaining on the final ballot" << std::endl;
     }
+
     catch (ics::IcsError& e) {
         std::cout << e.what() << std::endl;
     }
+
     return 0;
 }
