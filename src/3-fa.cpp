@@ -68,6 +68,19 @@ TransitionQueue process (const FA& fa, std::string state, const InputsQueue& inp
     //The first pair contains "" as the input and the initial state.
     //If any input i is illegal (does not lead to a state in the finite
     //  automaton, then the last pair in the returned queue is i,"None".
+    InputStateMap ism;
+    std::string new_state;
+    TransitionQueue trans_queue;
+    trans_queue.enqueue(Transition("", state));
+
+    for (auto input : inputs) {
+        ism         = fa[state];
+        new_state = (ism.has_key(input)) ? ism[input] : "None";
+        Transition trans(input, new_state);
+        trans_queue.enqueue(trans);
+        state = new_state;
+    }
+    return trans_queue;
 }
 
 void interpret (TransitionQueue& tq) {  //or TransitionQueue or TransitionQueue&&
@@ -93,8 +106,18 @@ int main () {
         FA fa = read_fa(file);
         print_fa(fa);
 
+        std::ifstream inputs_file;
+        ics::safe_open(file, "\nEnter file name of start-states and inputs", "fainputparity.txt");
 
-
+        std::string line;
+        while (getline(inputs_file, line)) {
+            std::vector<std::string> line_as_vector = ics::split(line, ";");
+            std::string state = line_as_vector[0];
+            InputsQueue iq;
+            for (std::vector<std::string>::iterator it = line_as_vector.begin()+1; it != line_as_vector.end(); ++it)
+                iq.enqueue(*it);
+            TransitionQueue tq = process(fa, state, iq);
+        }
 
 
 
