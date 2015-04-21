@@ -87,6 +87,16 @@ CandidateTally evaluate_ballot (const Preferences& preferences, const CandidateS
     //Every possible candidate should appear as a key in the resulting tally.
     //Each voter should tally one vote: for their highest-ranked candidate who is
     //  still in the the election.
+    CandidateTally ct;
+    for (PreferencesEntry prefs : preferences) {
+        for (std::string cand : prefs.second) {
+            if (candidates.contains(cand)) {
+                ct[cand] += 1;
+                break;
+            }
+        }
+    }
+    return ct;
 }
 
 CandidateSet remaining_candidates (const CandidateTally& tally) {
