@@ -46,10 +46,19 @@ const FA read_fa (std::ifstream& file) {
     return fa;
 }
 
+bool fa_entry_alphabetically (const FAEntry& a, const FAEntry& b) {
+    return a.first < b.first;
+}
 void print_fa (const FA& fa) {
     //Print a label and all the entries in the finite automaton Map, in
     //  alphabetical order of the states: each line has a state, the text
     //  "transition:" and the Map of its transitions.
+    FAPQ sorted_fa(fa_entry_alphabetically);
+    sorted_fa.enqueue(fa.ibegin(), fa.iend());
+
+    std::cout << "\nFinite Automaton Description" << std::endl;
+    for (FAEntry kv : sorted_fa)
+        std::cout << "  " << kv.first << " transitions: " << kv.second << std::endl;
 }
 
 TransitionQueue process (const FA& fa, std::string state, const InputsQueue& inputs) {
@@ -82,6 +91,7 @@ int main () {
         std::ifstream file;
         ics::safe_open(file, "Enter file name", "faparity.txt");
         FA fa = read_fa(file);
+        print_fa(fa);
 
 
 
