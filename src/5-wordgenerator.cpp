@@ -17,7 +17,6 @@ typedef ics::ArrayPriorityQueue<CorpusEntry> CorpusPQ;
 typedef ics::ArrayMap<WordQueue,FollowSet>   Corpus;
 
 
-
 Corpus read_corpus (int os, std::ifstream& file) {
     //Read an open file of lines of words (separated by spaces) and return a
     //  Corpus (Map) of each sequence (Queue) of os (Order-Statistic) words
@@ -111,7 +110,7 @@ WordQueue produce_text (const Corpus& corpus, const WordQueue& start, int count)
         wq_key.dequeue();
         wq_key.enqueue(chosen);
     }
-    return wq_gen;    
+    return wq_gen;
 }
 
 int main () {
