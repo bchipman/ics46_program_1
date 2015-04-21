@@ -10,16 +10,19 @@
 #include "array_set.hpp"
 #include "array_map.hpp"
 
+typedef std::string                                             Candidate;
+typedef ics::ArraySet           <Candidate>                     CandidateSet;
+typedef ics::ArrayQueue         <Candidate>                     CandidateQueue;
+typedef ics::ArrayMap           <Candidate, int>                CandidateTally;
+typedef ics::pair               <Candidate, int>                CandidateTallyEntry;
 
-typedef ics::ArrayQueue         <std::string>                   CandidateQueue;
-typedef ics::ArraySet           <std::string>                   CandidateSet;
-typedef ics::ArrayMap           <std::string, int>              CandidateTally;
 
-typedef ics::ArrayMap           <std::string, CandidateQueue>   Preferences;
-typedef ics::pair               <std::string, CandidateQueue>   PreferencesEntry;
+typedef std::string                                             Voter;
+typedef ics::ArrayMap           <Voter, CandidateQueue>         Preferences;
+typedef ics::pair               <Voter, CandidateQueue>         PreferencesEntry;
 typedef ics::ArrayPriorityQueue <PreferencesEntry>              PreferencesEntryPQ;
 
-typedef ics::pair               <std::string, int>              TallyEntry;
+typedef ics::pair               <Candidate, int>                TallyEntry;
 typedef ics::ArrayPriorityQueue <TallyEntry>                    TallyEntryPQ;
 
 
@@ -38,7 +41,7 @@ Preferences read_voter_preferences (std::ifstream& file) {
         line_as_vector.erase(line_as_vector.begin());
 
         CandidateQueue cq;
-        for (auto candidate_pref : line_as_vector)
+        for (std::string candidate_pref : line_as_vector)
             cq.enqueue(candidate_pref);
         preferences[voter] = cq;
     }
@@ -89,10 +92,10 @@ CandidateTally evaluate_ballot (const Preferences& preferences, const CandidateS
     //  still in the the election.
     CandidateTally ct;
     for (PreferencesEntry prefs : preferences) {
-        for (std::string cand : prefs.second) {
-            if (candidates.contains(cand)) {
-                ct[cand] += 1;
-                break;
+        for (Candidate cand : prefs.second) {
+            if (candidates.contains(cand)) {    //if the candidate is still in the race ..
+                ++ct[cand];                     //.. then add one vote for said candidate
+                break;                          //.. and break out of the loop
             }
         }
     }
@@ -107,13 +110,13 @@ CandidateSet remaining_candidates (const CandidateTally& tally) {
 
     //Computing the minimum number of votes
     int min_votes = std::numeric_limits<int>::max();
-    for (auto ct : tally)
+    for (CandidateTallyEntry ct : tally)
         if (ct.second < min_votes)
             min_votes = ct.second;
 
     //Adding all candidates that received more votes than the minimum
     CandidateSet rem_cands;
-    for (auto ct : tally)
+    for (CandidateTallyEntry ct : tally)
         if (ct.second > min_votes)
             rem_cands.insert(ct.first);
     return rem_cands;
@@ -141,8 +144,8 @@ int main () {
         //Create initial set of candidates.
         //I suppose I could just loop through a single PreferencesEntry's CandidateQueue, but what about write-in ballots, etc?
         CandidateSet rem_cands;
-        for (auto kv : prefs)
-            for (auto v : kv.second)
+        for (PreferencesEntry kv : prefs)
+            for (Candidate v : kv.second)
                 rem_cands.insert(v);
 
         int ballot_num = 1;
