@@ -41,33 +41,43 @@ Preferences read_voter_preferences (std::ifstream& file) {
         for (auto candidate_pref : line_as_vector)
             cq.enqueue(candidate_pref);
         preferences[voter] = cq;
-                //enqueue(cq);
     }
     return preferences;
 }
 
-bool entry_in_alphabetical_order(const PreferencesEntry& a, const PreferencesEntry& b) {
+bool pref_entry_alphabetically (const PreferencesEntry& a, const PreferencesEntry& b) {
     return a.first < b.first;
 }
-
 void print_voter_preferences (const Preferences& preferences) {
     //Print a label and all the entries in the preferences Map, in alphabetical
     //  order according to the voter.
     //Use a "->" to separate the voter name from the Queue of candidate names.
-    PreferencesEntryPQ sorted_preferences(entry_in_alphabetical_order);
+    PreferencesEntryPQ sorted_preferences(pref_entry_alphabetically);
     sorted_preferences.enqueue(preferences.ibegin(), preferences.iend());
 
-    std::cout<<"\nVoter Preferences"<<std::endl;
+    std::cout << "\nVoter Preferences" << std::endl;
     for (PreferencesEntry kv : sorted_preferences)
-        std::cout<<"  "<<kv.first<<" -> "<<kv.second<<std::endl;
+        std::cout << "  " << kv.first << " -> " << kv.second << std::endl;
 }
 
+bool tally_entry_alphabetically (const TallyEntry& a, const TallyEntry& b) {
+  return a.first < b.first;
+}
+bool tally_entry_numerically (const TallyEntry& a, const TallyEntry& b) {
+  return a.second > b.second;
+}
 void print_tally (std::string message, const CandidateTally& tally, bool (* has_higher_priority) (const TallyEntry& i, const TallyEntry& j)) {
     //Print the message followed by all the entries in the CandidateTally, in
     //   the order specified by *has_higher_priority: i is printed before j, if
     //   has_higher_priority(i,j) returns true.
-    //Use a "->" to separate the candidat name from the number of votes they
+    //Use a "->" to separate the candidate name from the number of votes they
     //  received.
+    TallyEntryPQ sorted_tally(has_higher_priority);
+    sorted_tally.enqueue(tally.ibegin(), tally.iend());
+
+    std::cout << message << std::endl;
+    for (TallyEntry kv : sorted_tally)
+        std::cout << "  " << kv.first << " -> " << kv.second << std::endl;
 }
 
 CandidateTally evaluate_ballot (const Preferences& preferences, const CandidateSet& candidates) {
@@ -99,11 +109,31 @@ int main () {
     //Print the final result: there may 1 candidate left, the winner, or 0, no
     //  winner.
     try {
-
         std::ifstream file;
         ics::safe_open(file, "Enter file name", "votepref1.txt");
-        Preferences preferences = read_voter_preferences(file);
-        print_voter_preferences(preferences);
+        Preferences prefs = read_voter_preferences(file);
+        print_voter_preferences(prefs);
+
+        //Create initial set of candidates.
+        //I suppose I could just loop through a single PreferencesEntry's CandidateQueue, but what about write-in ballots, etc?
+        CandidateSet rem_cands;
+        for (auto kv : prefs)
+            for (auto v : kv.second)
+                rem_cands.insert(v);
+
+        int ballot_num = 1;
+        while (rem_cands.size() > 1) {
+            CandidateTally tally = evaluate_ballot(prefs, rem_cands);
+
+            std::stringstream ss_alpha, ss_numeric;
+            ss_alpha << "\nVote count on ballot #" << ballot_num << " with candidates alphabetically: still in election = " << rem_cands;
+            ss_numeric << "\nVote count on ballot #" << ballot_num << " with candidates numerically: still in election = " << rem_cands;
+            print_tally(ss_alpha.str(), tally, tally_entry_alphabetically);
+            print_tally(ss_numeric.str(), tally, tally_entry_numerically);
+
+            rem_cands = remaining_candidates(tally);
+            ++ballot_num;
+        }
 
     }
     catch (ics::IcsError& e) {
