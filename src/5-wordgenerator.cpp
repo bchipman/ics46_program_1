@@ -53,13 +53,35 @@ bool queue_gt (const CorpusEntry& a, const CorpusEntry& b) {
     //  the first queue is not greater.
     //Note that the queues sizes are the same: each stores Order-Statistic words
     //Important: Use iterators for examining the queue values: DO NOT CALL DEQUEUE.
-}
+    ics::Iterator<std::string>& it_a = a.first.ibegin();
+    ics::Iterator<std::string>& it_b = b.first.ibegin();
 
+    while (it_a != a.first.iend()) {
+        if (*it_a != *it_b)
+            return (*it_a < *it_b);
+        ++it_a;
+        ++it_b;
+    }
+    return false;
+}
 void print_corpus (const Corpus& corpus) {
     //Print "Corpus" and all entries in the Corpus, in lexical alphabetical order
     //  (with the minimum and maximum set sizes at the end).
     //Use a "can be followed by any of" to separate the key word from the Set of words
     //  that can follow it.
+    CorpusPQ sorted_corpus(queue_gt);
+    sorted_corpus.enqueue(corpus.ibegin(), corpus.iend());
+
+    int max = 0;
+    int min = std::numeric_limits<int>::max();
+
+    std::cout << "\nCorpus" << std::endl;
+    for (CorpusEntry kv : sorted_corpus) {
+        max = (kv.second.size() > max) ? kv.second.size() : max;
+        min = (kv.second.size() < min) ? kv.second.size() : min;
+        std::cout << "  " << kv.first << " -> " << kv.second << std::endl;
+    }
+    std::cout << "min/max = " << min << "/" << max << std::endl;
 }
 
 std::string random_in_set (const FollowSet& words) {
@@ -92,7 +114,7 @@ int main () {
         ics::safe_open(wg_text_file, "Enter file name to process", "wginput1.txt");
 
         Corpus corpus = read_corpus(order_stat, wg_text_file);
-        //print_corpus(corpus);
+        print_corpus(corpus);
 
 
 
