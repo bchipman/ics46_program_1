@@ -64,10 +64,10 @@ void print_voter_preferences (const Preferences& preferences) {
 }
 
 bool tally_entry_alphabetically (const TallyEntry& a, const TallyEntry& b) {
-  return a.first < b.first;
+    return a.first < b.first;
 }
 bool tally_entry_numerically (const TallyEntry& a, const TallyEntry& b) {
-  return a.second > b.second;
+    return a.second > b.second;
 }
 void print_tally (std::string message, const CandidateTally& tally, bool (* has_higher_priority) (const TallyEntry& i, const TallyEntry& j)) {
     //Print the message followed by all the entries in the CandidateTally, in
